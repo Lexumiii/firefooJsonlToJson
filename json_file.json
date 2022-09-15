@@ -1,0 +1,64 @@
+{
+    "cars": {
+        "89dHLbXAOooudSNHv6Jt": {
+            "settings": {
+                "hideNote": true,
+                "hidePowered": true
+            }
+        },
+        "gKwqLR2oXGvpNNqxoltq": {
+            "previewImage": "https://firebasestorage.googleapis.com/v0/b/carhub-ac344.appspot.com/o/files%2FIMG_8002.JPG?alt=media&token=9cec0f58-3de1-46cd-9fc3-6668009f6622"
+        }
+    },
+    "users": {
+        "NflSGt6KyzEItiu5m11m": {
+            "id": "rypQii73tUdWkuwC1eBEa"
+        },
+        "OJIGXU5Thog4LFyZwBuQ": {
+            "uid": "Wlrs6KOlEOaXtzJKaCH20urZiIJ3"
+        },
+        "SDt4wNKxMurdDTZBmb6z": {
+            "uid": "RLwrC9K2EDRznlc6Y2AsYdKupiB2"
+        },
+        "q13FNboYIqiQAmtdIWys": {
+            "uid": "fVOFnj5ontMI2bLHCQV221WUQtq1"
+        },
+        "yJs5WZ0R85k7ou2GFq2a": {
+            "uid": "IGgiXkx4uZVFu6JdY8D0umCgBsx2"
+        },
+        "zovIWMh1bsgEik95Blel": {
+            "uid": "bdME0ADrZQZaprUPhU1yTWQid3G2"
+        },
+        "test": {
+            "rypQii73tUdWkuwC1eBE": {
+                "id": "rypQii73tUdWkuwC1eBEa"
+            }
+        }
+    },
+    "brands": {
+        "Fp5Kwr7NXNRPxY7Yx3QK": {
+            "name": "",
+            "cars": {
+                "XkCTpVinrMkR7bciGkPU": {
+                    "name": ""
+                }
+            }
+        },
+        "aC0sx1WVQnV2oPOILP8J": {
+            "name": "BMW"
+        },
+        "jC5lZzH7f2sKbluPCvAB": {
+            "name": "gsx-r",
+            "cars": {
+                "oKir8BqrPKHVfXNFphQg": {
+                    "name": "gsx-r"
+                }
+            }
+        },
+        "cars": {
+            "XkCTpVinrMkR7bciGkPU": {
+                "name": ""
+            }
+        }
+    }
+}
