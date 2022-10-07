@@ -1,9 +1,11 @@
 import json
 import datetime
+import math
 import re
 import sys
 import os.path
-
+import psutil
+import time
 
 class Converter:
     def __init__(self):
@@ -40,7 +42,7 @@ class Converter:
         with open(self.json_file_name, "r+", encoding="utf-8") as file:
             file_data = json.load(file)
             file.close()
-        for line in progressbar(self.file_content, "Converting: ", 40):
+        for line in progressbar(self.file_content, "Progress: ", 40):
             # loop over keys
             for key in line:
                 # skip if unwanted keys
@@ -98,10 +100,10 @@ class Converter:
 
 def progressbar(it, prefix="", size=60, out=sys.stdout):
     count = len(it)
-
+    
     def show(j):
         x = int(size*j/count)
-        print("{}[{}{}] {}/{}".format(prefix, "#"*x, "."*(size-x), j, count),
+        print("{}[{}{}] {}/{} | Memory usage: {}/{} ({}%)".format(prefix, "#"*x, "."*(size-x), j, count, convert_size(psutil.virtual_memory().used), convert_size(psutil.virtual_memory().total), str(psutil.virtual_memory().percent).replace(")", "")),
               end='\r', file=out, flush=True)
     show(0)
     for i, item in enumerate(it):
@@ -109,6 +111,14 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):
         show(i+1)
     print("\n", flush=True, file=out)
 
+def convert_size(size_bytes):
+    if size_bytes == 0:
+       return "0B"
+    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    return "%s %s" % (s, size_name[i])
 
 if __name__ == "__main__":
     Converter().start()
