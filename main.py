@@ -5,7 +5,6 @@ import re
 import sys
 import os.path
 import psutil
-import time
 
 class Converter:
     def __init__(self):
@@ -103,7 +102,7 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):
     
     def show(j):
         x = int(size*j/count)
-        print("{}[{}{}] {}/{} | Memory usage: {}/{} ({}%)".format(prefix, "#"*x, "."*(size-x), j, count, convert_size(psutil.virtual_memory().used), convert_size(psutil.virtual_memory().total), str(psutil.virtual_memory().percent).replace(")", "")),
+        print("{}|{}{}| {}/{} | Memory usage: {}/{} ({}%)".format(prefix, u'█'*x, "."*(size-x), j, count, convert_size(psutil.virtual_memory().used), convert_size(psutil.virtual_memory().total), str(psutil.virtual_memory().percent).replace(")", "")),
               end='\r', file=out, flush=True)
     show(0)
     for i, item in enumerate(it):
