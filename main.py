@@ -9,6 +9,7 @@ import psutil
 class Converter:
     def __init__(self):
         print("--- Preparing data ---")
+        self.start_time = datetime.datetime.now()
         while True:
             self.file_name = input("Filename of jsonl file: ")	
             input_exists = os.path.exists(self.file_name)
@@ -39,7 +40,6 @@ class Converter:
 
     def start(self):
         # print start
-        start_time = datetime.datetime.now()
         print("--- Starting conversion ---")
         # read data
         with open(self.json_file_name, "r+", encoding="utf-8") as file:
@@ -92,7 +92,7 @@ class Converter:
         end_time = datetime.datetime.now()
         
         # calculate time run
-        difference = end_time - start_time
+        difference = end_time - self.start_time
         print("Time run:", difference)
 
     def replace(m):
