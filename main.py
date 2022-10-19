@@ -31,10 +31,6 @@ class Converter:
         self.line_count = sum(1 for line in open(
             self.file_name, encoding="utf-8"))
         print("Lines to process: ", self.line_count)
-        # open jsonl file
-        with open(self.file_name, "r+", encoding="utf-8") as f:
-            data = [json.loads(line) for line in f]
-            self.file_content = data
 
         print("--- Finsihed preparing data --- \n")
 
@@ -45,41 +41,65 @@ class Converter:
         with open(self.json_file_name, "r+", encoding="utf-8") as file:
             file_data = json.load(file)
             file.close()
-        for line in progressbar(self.file_content, "Progress: ", 40):
-            # loop over keys
-            for key in line:
-                # skip if unwanted keys
-                if(key.startswith("__") or key == "__id__"):
-                    continue
+            
+        # get times of rounds the loop as to do
+        rounds = self.line_count / 1000
+        
+        # round UP the number
+        rounds = math.ceil(rounds)
+        begin_range = 0
+        if(self.line_count < 1000):
+            stop_range = self.line_count
+        else: 
+            stop_range = 1000
+        
+        for round in progressbar(rounds, "Progress: ", 40):
+            # open jsonl file
+            with open(self.file_name, "r+", encoding="utf-8") as f:
+                data = [next(json.loads(line) for line in f) for x in range (begin_range, stop_range)]
+                
+            for line in data:
+                # loop over keys
+                for key in line:
+                    # skip if unwanted keys
+                    if(key.startswith("__") or key == "__id__"):
+                        continue
 
-                path = line["__path__"].split("/")  # get path as array
-                value = line[key]
-                
-                current = file_data;
-                
-                # loop over path array 
-                for i in range(0, len(path), 2):
+                    path = line["__path__"].split("/")  # get path as array
+                    value = line[key]
                     
-                    # break loop to prevent errors if empty subcollection
-                    if(i - 1 > len(path)): 
-                        break; 
+                    current = file_data;
                     
-                    # get path key and id
-                    path_key = path[i]
-                    path_id = path[i + 1]
-                    
-                    if(path_key not in current):
-                        current[path_key] = {}
-                    
-                    if path_id not in current[path_key]:
-                        # add empty document object to main collection
-                        current[path_key][path_id] = {}
+                    # loop over path array 
+                    for i in range(0, len(path), 2):
                         
-                    if(len(path) - 2 == i):
-                        current[path_key][path_id][key] = value
-                    else: 
-                        # assign new object to current
-                        current = current[path_key][path_id]          
+                        # break loop to prevent errors if empty subcollection
+                        if(i - 1 > len(path)): 
+                            break; 
+                        
+                        # get path key and id
+                        path_key = path[i]
+                        path_id = path[i + 1]
+                        
+                        if(path_key not in current):
+                            current[path_key] = {}
+                        
+                        if path_id not in current[path_key]:
+                            # add empty document object to main collection
+                            current[path_key][path_id] = {}
+                            
+                        if(len(path) - 2 == i):
+                            current[path_key][path_id][key] = value
+                        else: 
+                            # assign new object to current
+                            current = current[path_key][path_id]     
+            
+            # increase lines
+            begin_range = stop_range
+            if(stop_range + 1000 > self.line_count):
+                stop_range = self.line_count
+            else: 
+                stop_range = stop_range + 1000          
 
         # write data
         with open(self.json_file_name, "w+", encoding="utf-8") as file:
@@ -98,16 +118,24 @@ class Converter:
 
 
 def progressbar(it, prefix="", size=60, out=sys.stdout):
-    count = len(it)
-    
+    if isinstance(it, int):
+        count = it
+    else: 
+        count = len(it)
+        
     def show(j):
         x = int(size*j/count)
         print("{}|{}{}| {}/{} | Memory usage: {}/{} ({}%)".format(prefix, u'█'*x, "."*(size-x), j, count, convert_size(psutil.virtual_memory().used), convert_size(psutil.virtual_memory().total), str(psutil.virtual_memory().percent).replace(")", "")),
               end='\r', file=out, flush=True)
     show(0)
-    for i, item in enumerate(it):
-        yield item
-        show(i+1)
+    if(isinstance(it, int)):
+        for i in range(it):
+            yield i
+            show(i+1)
+    else: 
+        for i, item in enumerate(it):
+            yield item
+            show(i+1)
     print("\n", flush=True, file=out)
 
 def convert_size(size_bytes):
