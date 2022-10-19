@@ -9,6 +9,7 @@ import psutil
 class Converter:
     def __init__(self):
         print("--- Preparing data ---")
+        self.start_time = datetime.datetime.now()
         while True:
             self.file_name = input("Filename of jsonl file: ")	
             input_exists = os.path.exists(self.file_name)
@@ -39,7 +40,6 @@ class Converter:
 
     def start(self):
         # print start
-        start_time = datetime.datetime.now()
         print("--- Starting conversion ---")
         # read data
         with open(self.json_file_name, "r+", encoding="utf-8") as file:
@@ -54,34 +54,32 @@ class Converter:
 
                 path = line["__path__"].split("/")  # get path as array
                 value = line[key]
-
-                if path[0] not in file_data:
-                    file_data[path[0]] = {}  # add empty main collection object
-
-                if path[1] not in file_data[path[0]]:
-                    # add empty document object to main collection
-                    file_data[path[0]][path[1]] = {}
-
-                if(len(path) == 2):
-                    # add key and value if no subcollection is there
-                    file_data[path[0]][path[1]][key] = value
-                else:
-                    # has subcollection
-                    collectionName = path[2]  # get subcollection name
-                    # get current document id of subcollection
-                    documentId = path[3]
-
-                    # check if subcollection already exists in dictionary
-                    if collectionName not in file_data[path[0]][path[1]]:
-                        # add empty subcollection if
-                        file_data[path[0]][path[1]][collectionName] = {}
-
-                    if documentId not in file_data[path[0]][path[1]][collectionName]:
-                        # add empty object if subcollection has no document
-                        file_data[path[0]][path[1]][collectionName][documentId] = {}
-
-                    # add key and value
-                    file_data[path[0]][path[1]][collectionName][documentId][key] = value
+                
+                current = file_data;
+                
+                # loop over path array 
+                for i in range(0, len(path), 2):
+                    
+                    # break loop to prevent errors if empty subcollection
+                    if(i - 1 > len(path)): 
+                        break; 
+                    
+                    # get path key and id
+                    path_key = path[i]
+                    path_id = path[i + 1]
+                    
+                    if(path_key not in current):
+                        current[path_key] = {}
+                    
+                    if path_id not in current[path_key]:
+                        # add empty document object to main collection
+                        current[path_key][path_id] = {}
+                        
+                    if(len(path) - 2 == i):
+                        current[path_key][path_id][key] = value
+                    else: 
+                        # assign new object to current
+                        current = current[path_key][path_id]          
 
         # write data
         with open(self.json_file_name, "w+", encoding="utf-8") as file:
@@ -92,7 +90,7 @@ class Converter:
         end_time = datetime.datetime.now()
         
         # calculate time run
-        difference = end_time - start_time
+        difference = end_time - self.start_time
         print("Time run:", difference)
 
     def replace(m):
