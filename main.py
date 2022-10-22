@@ -1,3 +1,4 @@
+from itertools import islice
 import json
 import datetime
 import math
@@ -56,7 +57,7 @@ class Converter:
         for round in progressbar(rounds, "Progress: ", 40):
             # open jsonl file
             with open(self.file_name, "r+", encoding="utf-8") as f:
-                data = [next(json.loads(line) for line in f) for x in range (begin_range, stop_range)]
+                data = [json.loads(line) for line in islice(f, begin_range, stop_range)]
                 
             for line in data:
                 # loop over keys
@@ -116,7 +117,6 @@ class Converter:
     def replace(m):
         return bytes.fromhex(''.join(m.groups(''))).decode('utf-16-be')
 
-
 def progressbar(it, prefix="", size=60, out=sys.stdout):
     if isinstance(it, int):
         count = it
@@ -137,6 +137,7 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):
             yield item
             show(i+1)
     print("\n", flush=True, file=out)
+    
 
 def convert_size(size_bytes):
     if size_bytes == 0:
