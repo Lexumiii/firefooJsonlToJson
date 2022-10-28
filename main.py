@@ -27,7 +27,7 @@ class Converter:
         self.json_file_name = "./result.json"
         
         # set default round number 
-        self.round_line = 10000
+        self.round_line = 1000
         
         # check if output file exist
         if not os.path.exists(self.json_file_name):
@@ -62,57 +62,56 @@ class Converter:
             stop_range = self.line_count
         else: 
             stop_range = self.round_line
-        
-        for round in progressbar(rounds, "Progress: ", 40):
-            # open jsonl file
-            with open(self.file_name, "r+", encoding="utf-8") as f:
+        with open(self.file_name, "r+", encoding="utf-8") as f:
+            for round in progressbar(rounds, "Progress: ", 40):
+                # open jsonl file
                 data = [json.loads(line) for line in islice(f, begin_range, stop_range)]
+                    
+                for line in data:
+                    # get path as array
+                    path = line["__path__"].split("/")  
+                    try:
+                        line.pop("__id__")
+                        line.pop("__path__")
+                        line.pop("__exportPath__")
+                    except KeyError:
+                        pass
+                    
+                    current = file_data;
+                    
+                    # loop over path array every two elements
+                    for i in range(0, len(path), 2):
+                        
+                        # break loop to prevent errors if empty subcollection
+                        if(i - 1 > len(path)): 
+                            break; 
+                        
+                        # get path key and id
+                        path_key = path[i]
+                        path_id = path[i + 1]
+                        
+                        # add empty object to current path key
+                        if(path_key not in current):
+                            current[path_key] = {}
+                        
+                        # check if current path id is in path
+                        if path_id not in current[path_key]:
+                            # add empty document object to main collection
+                            current[path_key][path_id] = {}
+                        
+                        # check if loop can go deeper and if not assign value
+                        if(len(path) - 2 == i):
+                            current[path_key][path_id] = line
+                        else: 
+                            # assign new object to current
+                            current = current[path_key][path_id]
                 
-            for line in data:
-                # get path as array
-                path = line["__path__"].split("/")  
-                try:
-                    line.pop("__id__")
-                    line.pop("__path__")
-                    line.pop("__exportPath__")
-                except KeyError:
-                    pass
+                # set new begin range
+                begin_range = stop_range
                 
-                current = file_data;
-                
-                # loop over path array every two elements
-                for i in range(0, len(path), 2):
-                    
-                    # break loop to prevent errors if empty subcollection
-                    if(i - 1 > len(path)): 
-                        break; 
-                    
-                    # get path key and id
-                    path_key = path[i]
-                    path_id = path[i + 1]
-                    
-                    # add empty object to current path key
-                    if(path_key not in current):
-                        current[path_key] = {}
-                    
-                    # check if current path id is in path
-                    if path_id not in current[path_key]:
-                        # add empty document object to main collection
-                        current[path_key][path_id] = {}
-                    
-                    # check if loop can go deeper and if not assign value
-                    if(len(path) - 2 == i):
-                        current[path_key][path_id] = line
-                    else: 
-                        # assign new object to current
-                        current = current[path_key][path_id]
-            
-            # set new begin range
-            begin_range = stop_range
-            
-            # set new stop range
-            if(stop_range + self.round_line > self.line_count): stop_range = self.line_count
-            else: stop_range = stop_range + self.round_line
+                # set new stop range
+                if(stop_range + self.round_line > self.line_count): stop_range = self.line_count
+                else: stop_range = stop_range + self.round_line
                 
 
         # write data
