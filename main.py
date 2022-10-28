@@ -27,7 +27,7 @@ class Converter:
         self.json_file_name = "./result.json"
         
         # set default round number 
-        self.round_line = 1000
+        self.round_line = 5000
         
         # check if output file exist
         if not os.path.exists(self.json_file_name):
@@ -56,16 +56,10 @@ class Converter:
         # round UP the number
         rounds = math.ceil(rounds)
         
-        # set default start range
-        begin_range = 0
-        if(self.line_count < self.round_line):
-            stop_range = self.line_count
-        else: 
-            stop_range = self.round_line
         with open(self.file_name, "r+", encoding="utf-8") as f:
             for round in progressbar(rounds, "Progress: ", 40):
                 # open jsonl file
-                data = [json.loads(line) for line in islice(f, begin_range, stop_range)]
+                data = [json.loads(line) for line in islice(f, self.round_line)]
                     
                 for line in data:
                     # get path as array
@@ -106,18 +100,9 @@ class Converter:
                             # assign new object to current
                             current = current[path_key][path_id]
                 
-                # set new begin range
-                begin_range = stop_range
-                
-                # set new stop range
-                if(stop_range + self.round_line > self.line_count): stop_range = self.line_count
-                else: stop_range = stop_range + self.round_line
-                
-
         # write data
         print("Writing data")
         with open(self.json_file_name, "w", encoding="utf-8") as file:
-            file.seek(0)
             json.dump(file_data, file, ensure_ascii=False)
         print("--- Finished conversion ---")
         
