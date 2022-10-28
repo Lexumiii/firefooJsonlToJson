@@ -2,7 +2,6 @@ from itertools import islice
 import json
 import datetime
 import math
-import re
 import sys
 import os.path
 import psutil
@@ -18,6 +17,7 @@ class Converter:
             # check if file type is jsonll
             if not self.file_name.endswith(".jsonl"):
                 print("File is not a jsonl file.", flush=True)
+                continue;
             
             # check if file exists
             if os.path.exists(self.file_name): break;
@@ -27,7 +27,7 @@ class Converter:
         self.json_file_name = "./result.json"
         
         # set default round number 
-        self.round_line = 1000
+        self.round_line = 10000
         
         # check if output file exist
         if not os.path.exists(self.json_file_name):
@@ -116,6 +116,7 @@ class Converter:
                 
 
         # write data
+        print("Writing data")
         with open(self.json_file_name, "w", encoding="utf-8") as file:
             file.seek(0)
             json.dump(file_data, file, ensure_ascii=False)
