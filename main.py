@@ -9,7 +9,6 @@ import psutil
 class Converter:
     def __init__(self):
         print("--- Preparing data ---")
-        self.start_time = datetime.datetime.now()
         while True:
             # get jsonl filename 
             self.file_name = input("Filename of jsonl file: ")	
@@ -39,9 +38,9 @@ class Converter:
         # get line count of jsonl file
         with open(self.file_name, 'r') as f:
             self.line_count = sum(1 for line in f)
-        
         print("Lines to process: ", self.line_count)
         print("--- Finsihed preparing data --- \n")
+        self.start_time = datetime.datetime.now()
 
     def start(self):
         # print start
