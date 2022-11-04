@@ -4,7 +4,7 @@ This tool can convert jsonl files from a firebase export (with firefoo) to regul
 # Usage
 * Copy export from firefoo into root folder
 * Open terminal
-* Run command ```python main.py```
+* Run command ```python main.py``` or if you want to have the output split into separate files then add "-sc" to it. This will split the output by collection name
 * Input filename of firefoo export (for example ```export.jsonl```)
 * The program wil now start to prepare your data and then start the conversion
 * In the end the time the program has run will be displayed
