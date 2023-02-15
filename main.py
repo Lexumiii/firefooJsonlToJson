@@ -9,9 +9,13 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-sc', '--split_collections', help='Split outgoing files on main collections into different files', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('-st', '--stats', help='Show statistics of ram usage and more', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('-f', '--format', help='Format output', type=bool, action=argparse.BooleanOptionalAction)
 
 class Converter:
     def __init__(self):
+        """ Initialize the converter class.
+        """
         print('--- Preparing data ---')
 
         # initialize argument parser
@@ -19,6 +23,8 @@ class Converter:
         
         # assign for later usage
         self.split_collections = args.split_collections
+        self.stats = args.stats
+        self.format_output = args.format
         while True:
             # get jsonl filename 
             self.file_name = input('Filename of jsonl file: ')	
@@ -45,6 +51,12 @@ class Converter:
         # set default round number 
         self.round_line = 5000
         
+        # check if stats are enabled
+        if(self.stats == True):
+            self.max_ram_usage = psutil.virtual_memory().used
+            
+            
+        
         # check if output file exist
         if not os.path.exists(self.json_file_name):
             # file does not exist -> create
@@ -60,20 +72,19 @@ class Converter:
         self.start_time = datetime.datetime.now()
 
     def start(self):
+        """ Start conversion of jsonl file to json file.
+        """
         # print start
         print('--- Starting conversion ---')
         # read current output file data into dict
         with open(self.json_file_name, 'r+', encoding='utf-8') as file:
             file_data = json.load(file)
             
-        # get times of rounds the loop as to do
-        rounds = self.line_count / self.round_line
-        
-        # round UP the number
-        rounds = math.ceil(rounds)
+        # calculate rounds the loop has to go
+        rounds = self.calculateRounds()
         
         with open(self.file_name, 'r+', encoding='utf-8') as f:
-            for round in progressbar(rounds, 'Progress: ', 40):
+            for round in self.progressbar(rounds, 'Progress: ', 40):
                 # open jsonl file
                 data = [json.loads(line) for line in islice(f, self.round_line)]
                     
@@ -132,37 +143,98 @@ class Converter:
                 os.remove(self.json_file_name)
         else:
             with open(self.json_file_name, 'w', encoding='utf-8') as file:
-                json.dump(file_data, file, ensure_ascii=False)
+                # write output to file (check if output should be formatted)
+                if self.format_output == True: json.dump(file_data, file, ensure_ascii=False, indent=4)
+                else: json.dump(file_data, file, ensure_ascii=False)
         print('--- Finished conversion ---')
-        
-        print('Time run:', datetime.datetime.now() - self.start_time)
+        if(self.stats == False): 
+            print('Time run:', datetime.datetime.now() - self.start_time)
+        else:
+            self.return_statistics()
 
     def replace(m):
+        """ This method is used to replace the hex values in the string with the actual characters.
+
+        Args:
+            m (str): String that should be replaced.
+
+        Returns:
+            str: Replaced bytes.
+        """
         return bytes.fromhex(''.join(m.groups(''))).decode('utf-16-be')
 
-def progressbar(it, prefix='', size=60, out=sys.stdout):
-    if isinstance(it, int):
-        count = it
-    else: 
-        count = len(it)
+    def return_statistics(self): 
+        """ Print statistics of the conversion.
+        """
+        print("------- Statistics -------")
+        print("File converted: ", self.file_name)
+        print("Max RAM usage: ", convert_size(self.max_ram_usage))
+        print("Start time: ", self.start_time)
+        print("End time: ", datetime.datetime.now())
+        print("Time run: ", datetime.datetime.now() - self.start_time)
+        print("Lines converted: ", self.line_count)
+    
+    def calculateRounds(self):
+        """ Calculates the rounds that the programm has to run to process all lines.
+        The ammount of lines in a round is defined by the round_line variable.
+
+        Returns:
+            int: Returns the calculated rounds (rounded up)
+        """
+        return math.ceil(self.line_count / self.round_line)
+    
+    def progressbar(self, it, prefix='', size=60, out=sys.stdout):
+        """Create a custom progress bar.
+
+        Args:
+            it (object | int): Count of iterations.
+            prefix (str, optional): Prefix of the progress bar. Defaults to ''.
+            size (int, optional): Size of progress bar. Defaults to 60.
+            out (_SupportsWriteAndFlush[str], optional): File write. Defaults to sys.stdout.
+
+        Yields:
+            str: Progressbar.
+        """
         
-    def show(j):
-        x = size * j // count
-        print('{}|{}{}| {}/{} | Memory usage: {}/{} ({}%)'.format(prefix, u'█'*x, '.'*(size-x), j, count, convert_size(psutil.virtual_memory().used), convert_size(psutil.virtual_memory().total), str(psutil.virtual_memory().percent).replace(')', '')),
-              end='\r', file=out, flush=True)
-    show(0)
-    if(isinstance(it, int)):
-        for i in range(it):
-            yield i
-            show(i+1)
-    else: 
-        for i, item in enumerate(it):
-            yield item
-            show(i+1)
-    print('\n', flush=True, file=out)
+        # check if iteration is int or object
+        if isinstance(it, int):
+            count = it
+        else: 
+            count = len(it)
+            
+        def show(j):
+            """ Show progress bar.
+
+            Args:
+                j (int): Current progress
+            """
+            x = size * j // count
+            if(self.max_ram_usage < psutil.virtual_memory().used):
+                self.max_ram_usage = psutil.virtual_memory().used
+            print('{}|{}{}| {}/{} | Memory usage: {}/{} ({}%)'.format(prefix, u'█'*x, '.'*(size-x), j, count, convert_size(psutil.virtual_memory().used), convert_size(psutil.virtual_memory().total), str(psutil.virtual_memory().percent).replace(')', '')),
+                end='\r', file=out, flush=True)
+        show(0)
+        
+        if(isinstance(it, int)):
+            for i in range(it):
+                yield i
+                show(i+1)
+        else: 
+            for i, item in enumerate(it):
+                yield item
+                show(i+1)
+        print('\n', flush=True, file=out)
     
 
 def convert_size(size_bytes):
+    """Convert bytes to ```B```, ```KB```, ```MB```, ```GB```, ```TB```, ```PB```, ```EB```, ```ZB``` or ```YB```.
+
+    Args:
+        size_bytes (int): Input bytes
+
+    Returns:
+        _type_: Converted format
+    """
     if size_bytes == 0:
        return '0B'
     size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
@@ -170,6 +242,7 @@ def convert_size(size_bytes):
     p = math.pow(1024, i)
     s = round(size_bytes / p, 2)
     return '%s %s' % (s, size_name[i])
+
 
 if __name__ == '__main__':
     Converter().start()
