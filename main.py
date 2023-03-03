@@ -21,10 +21,14 @@ class Converter:
         # initialize argument parser
         args = parser.parse_args()
         
-        # assign for later usage
+        # initialize args parser variables
         self.split_collections = args.split_collections
+        # get stats arg
         self.stats = args.stats
+        
+        # get format arg
         self.format_output = args.format
+        
         while True:
             # get jsonl filename 
             self.file_name = input('Filename of jsonl file: ')	
@@ -76,6 +80,7 @@ class Converter:
         """
         # print start
         print('--- Starting conversion ---')
+        
         # read current output file data into dict
         with open(self.json_file_name, 'r+', encoding='utf-8') as file:
             file_data = json.load(file)
@@ -91,6 +96,8 @@ class Converter:
                 for line in data:
                     # get path as array
                     path = line['__path__'].split('/')  
+                    
+                    # remove unwanted data from lime
                     try:
                         line.pop('__id__')
                         line.pop('__path__')
@@ -98,6 +105,7 @@ class Converter:
                     except KeyError:
                         pass
                     
+                    # create ref to file data
                     current = file_data;
                     
                     # loop over path array every two elements
@@ -130,7 +138,6 @@ class Converter:
         # write data
         print('Writing data')
         if(self.split_collections == True):
-            # logic here
             # loop over main collections of file
             for key in file_data.keys(): 
                 # create folder for multiple output files
@@ -173,6 +180,7 @@ class Converter:
         print("End time: ", datetime.datetime.now())
         print("Time run: ", datetime.datetime.now() - self.start_time)
         print("Lines converted: ", self.line_count)
+        print("Lines converted/s: ", math.floor(self.line_count / (datetime.datetime.now() - self.start_time).total_seconds()))
     
     def calculateRounds(self):
         """ Calculates the rounds that the programm has to run to process all lines.
